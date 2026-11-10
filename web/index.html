@@ -43,7 +43,9 @@
               <h2>번역 언어</h2>
               <span class="section-note">최대 8개 · 한 번에 번역</span>
             </div>
-            <label for="languages">원하는 언어를 쉼표로 구분해주세요.</label>
+            <label for="languages"
+              >두 자리 언어 코드를 쉼표로 구분해주세요.</label
+            >
             <input
               id="languages"
               name="languages"
@@ -51,53 +53,22 @@
               required
               autocomplete="off"
               spellcheck="false"
+              autocapitalize="none"
+              lang="en"
+              placeholder="ko, en, ja, es"
               aria-describedby="language-help"
             />
-            <div class="language-presets" aria-label="자주 사용하는 언어">
-              <button
-                type="button"
-                class="language-chip"
-                data-language="한국어"
-                aria-pressed="false"
-              >
-                한국어
-              </button>
-              <button
-                type="button"
-                class="language-chip"
-                data-language="English"
-                aria-pressed="false"
-              >
-                English
-              </button>
-              <button
-                type="button"
-                class="language-chip"
-                data-language="日本語"
-                aria-pressed="false"
-              >
-                日本語
-              </button>
-              <button
-                type="button"
-                class="language-chip"
-                data-language="Español"
-                aria-pressed="false"
-              >
-                Español
-              </button>
-              <button
-                type="button"
-                class="language-chip"
-                data-language="简体中文"
-                aria-pressed="false"
-              >
-                简体中文
-              </button>
-            </div>
+            <button
+              type="button"
+              class="text-button"
+              id="language-codes-link"
+              aria-haspopup="dialog"
+            >
+              두 자리 언어 코드 보기
+            </button>
             <p class="field-help" id="language-help">
-              목록에 없는 언어도 직접 입력할 수 있습니다. 원문 언어는 자동으로
-              감지하며 일본어 번역의 한자에는 후리가나를 표시합니다.
+              ISO 639-1 코드를 사용합니다. 원문과 같은 언어는 자동으로 제외하며,
+              일본어 번역의 한자에는 후리가나를 표시합니다.
             </p>
           </section>
 
@@ -223,6 +194,42 @@
           </footer>
         </form>
       </div>
+      <div id="language-modal" class="language-modal" hidden>
+        <section
+          class="language-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="language-dialog-title"
+        >
+          <header class="language-dialog-header">
+            <div>
+              <span class="eyebrow">ISO 639-1</span>
+              <h2 id="language-dialog-title">언어 코드 찾기</h2>
+            </div>
+            <button
+              type="button"
+              class="icon-button"
+              id="close-language-modal"
+              aria-label="언어 코드 목록 닫기"
+            >
+              ×
+            </button>
+          </header>
+          <label for="language-search">코드 또는 언어 이름으로 검색</label>
+          <input
+            id="language-search"
+            type="search"
+            autocomplete="off"
+            placeholder="예: es, Spanish, 스페인어"
+          />
+          <p class="field-help">
+            코드를 누르면 입력창에서 추가·해제됩니다. 최대 8개까지 선택할 수
+            있습니다.
+          </p>
+          <p id="language-modal-feedback" class="feedback" role="status"></p>
+          <div id="language-code-list" class="language-code-list"></div>
+        </section>
+      </div>
     </template>
 
     <template id="tooltip-template">
@@ -250,6 +257,12 @@
             <span class="spinner" aria-hidden="true"></span
             ><span id="loading-message">선택한 문장을 가져오는 중</span>
           </div>
+          <p
+            id="translation-notice"
+            class="translation-notice"
+            role="status"
+            hidden
+          ></p>
           <div id="translations" aria-live="polite"></div>
           <p
             id="translation-error"

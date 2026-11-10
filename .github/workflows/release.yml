@@ -42,7 +42,7 @@ jobs:
             Windows x64: download the portable ZIP or setup EXE.
             macOS 12+: download the universal DMG or app ZIP (Apple Silicon and Intel).
 
-            Includes Japanese furigana and the Spanish language preset.
+            Includes Japanese furigana, searchable ISO 639-1 language codes, and automatic exclusion of the detected source language.
             Install the official Antigravity CLI and sign in with your Google AI Pro/Ultra account before translating. Node.js is not required at runtime.
 
             Windows binaries are unsigned. The macOS app is ad-hoc signed, not Developer ID signed or notarized. SmartScreen/Gatekeeper warnings may appear; use the operating system's explicit approval flow only if you trust this release. macOS Accessibility permission is required for the copy shortcut.

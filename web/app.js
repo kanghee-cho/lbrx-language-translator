@@ -1,8 +1,14 @@
-import { parseLanguages } from "./languages.js";
+import {
+  languageLabel,
+  languageName,
+  languageEnglishName,
+  parseLanguages,
+} from "./languages.js";
 
 const root = document.querySelector("#app");
 const api = window.__TAURI__;
 const tooltip = window.__LBRX_VIEW__ === "tooltip";
+let languageCodes = new Set();
 
 function message(error) {
   return error instanceof Error ? error.message : String(error);
@@ -16,26 +22,16 @@ function feedback(text, error = false) {
 
 function readConfig() {
   return {
-    targetLanguages: parseLanguages(document.querySelector("#languages").value),
+    targetLanguages: parseLanguages(
+      document.querySelector("#languages").value,
+      languageCodes,
+    ),
     cliPath: document.querySelector("#cli-path").value.trim(),
     model: document.querySelector("#model").value.trim(),
     doubleCopyMs: Number(document.querySelector("#interval").value),
     timeoutSeconds: Number(document.querySelector("#timeout").value),
     consent: document.querySelector("#consent").checked,
   };
-}
-
-function updateChips() {
-  const selected = document
-    .querySelector("#languages")
-    .value.split(/[,\n]/u)
-    .map((language) => language.trim());
-  for (const button of document.querySelectorAll(".language-chip")) {
-    button.setAttribute(
-      "aria-pressed",
-      String(selected.includes(button.dataset.language)),
-    );
-  }
 }
 
 function renderRuntime(settings) {
@@ -57,6 +53,7 @@ function renderRuntime(settings) {
 
 async function setupSettings() {
   const settings = await api.core.invoke("get_settings");
+  languageCodes = new Set(settings.languageCodes);
   const config = settings.config;
   document.querySelector("#languages").value =
     config.targetLanguages.join(", ");
@@ -66,25 +63,7 @@ async function setupSettings() {
   document.querySelector("#timeout").value = config.timeoutSeconds;
   document.querySelector("#consent").checked = config.consent;
   renderRuntime(settings);
-  updateChips();
-
-  document.querySelector("#languages").addEventListener("input", updateChips);
-  for (const button of document.querySelectorAll(".language-chip")) {
-    button.addEventListener("click", () => {
-      const input = document.querySelector("#languages");
-      const languages = input.value
-        .split(/[,\n]/u)
-        .map((language) => language.trim())
-        .filter(Boolean);
-      const language = button.dataset.language;
-      input.value = (
-        languages.includes(language)
-          ? languages.filter((item) => item !== language)
-          : [...languages, language]
-      ).join(", ");
-      updateChips();
-    });
-  }
+  setupLanguagePicker();
   document
     .querySelector("#settings-form")
     .addEventListener("submit", async (event) => {
@@ -139,6 +118,106 @@ async function setupSettings() {
   });
 }
 
+function setupLanguagePicker() {
+  const modal = document.querySelector("#language-modal");
+  const trigger = document.querySelector("#language-codes-link");
+  const search = document.querySelector("#language-search");
+  const input = document.querySelector("#languages");
+  const list = document.querySelector("#language-code-list");
+  const status = document.querySelector("#language-modal-feedback");
+  const selected = () =>
+    input.value
+      .split(/[,\n]/u)
+      .map((code) => code.trim().toLowerCase())
+      .filter(Boolean);
+  const render = () => {
+    const query = search.value.trim().toLowerCase();
+    const current = selected();
+    list.replaceChildren();
+    for (const code of languageCodes) {
+      const label = languageLabel(code);
+      const english = languageEnglishName(code);
+      if (!`${label} ${english}`.toLowerCase().includes(query)) continue;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "language-option";
+      button.dataset.code = code;
+      button.setAttribute("aria-pressed", String(current.includes(code)));
+      const identifier = document.createElement("code");
+      identifier.textContent = code;
+      const name = document.createElement("span");
+      name.textContent = `${languageName(code)} · ${english}`;
+      button.append(identifier, name);
+      button.addEventListener("click", () => {
+        const values = selected();
+        if (!values.includes(code) && values.length >= 8) {
+          status.textContent = "번역 언어는 최대 8개까지 선택할 수 있습니다.";
+          status.classList.add("is-error");
+          return;
+        }
+        input.value = (
+          values.includes(code)
+            ? values.filter((value) => value !== code)
+            : [...values, code]
+        ).join(", ");
+        status.classList.remove("is-error");
+        status.textContent = `${languageLabel(code)} ${values.includes(code) ? "해제" : "추가"}`;
+        for (const option of list.querySelectorAll("button")) {
+          option.setAttribute(
+            "aria-pressed",
+            String(selected().includes(option.dataset.code)),
+          );
+        }
+      });
+      list.append(button);
+    }
+    if (!list.childElementCount) list.textContent = "검색 결과가 없습니다.";
+  };
+  const close = () => {
+    modal.hidden = true;
+    document.querySelector(".settings").removeAttribute("aria-hidden");
+    trigger.focus();
+  };
+  trigger.addEventListener("click", () => {
+    search.value = "";
+    status.textContent = "";
+    render();
+    modal.hidden = false;
+    document.querySelector(".settings").setAttribute("aria-hidden", "true");
+    search.focus();
+  });
+  search.addEventListener("input", render);
+  document
+    .querySelector("#close-language-modal")
+    .addEventListener("click", close);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) close();
+  });
+  document.addEventListener("focusin", (event) => {
+    if (!modal.hidden && !modal.contains(event.target)) search.focus();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (modal.hidden) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      close();
+    }
+    if (event.key === "Tab") {
+      const items = [...modal.querySelectorAll("button, input")];
+      const first = items[0];
+      const last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      }
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+}
+
 let renderVersion = 0;
 async function renderPopup() {
   const version = ++renderVersion;
@@ -155,13 +234,27 @@ async function renderPopup() {
   const error = document.querySelector("#translation-error");
   error.textContent = popup.error ?? "";
   error.hidden = !popup.error;
+  const notice = document.querySelector("#translation-notice");
+  notice.textContent = "";
+  if (popup.status === "complete") {
+    if (popup.skippedLanguages.length) {
+      const labels = popup.skippedLanguages.map(languageLabel).join(", ");
+      notice.textContent = popup.translations.length
+        ? `원문과 같은 언어는 제외했습니다: ${labels}`
+        : `선택한 언어가 원문과 같아 번역을 생략했습니다: ${labels}`;
+    } else if (popup.sourceLanguage === "und") {
+      notice.textContent =
+        "원문 언어를 확정하지 못해 선택한 모든 언어로 번역했습니다.";
+    }
+  }
+  notice.hidden = !notice.textContent;
   const translations = document.querySelector("#translations");
   translations.replaceChildren();
   for (const translation of popup.translations) {
     const section = document.createElement("section");
     section.className = "translation";
     const heading = document.createElement("h2");
-    heading.textContent = translation.language;
+    heading.textContent = languageLabel(translation.language);
     const text = document.createElement("p");
     text.dir = "auto";
     if (translation.furigana.length) {
