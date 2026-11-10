@@ -277,7 +277,6 @@ async function renderPopup() {
     section.append(heading, text);
     translations.append(section);
   }
-  await new Promise((resolve) => requestAnimationFrame(resolve));
   if (version === renderVersion) {
     await api.core.invoke("present_popup", {
       height: document.querySelector(".popup").scrollHeight + 2,
