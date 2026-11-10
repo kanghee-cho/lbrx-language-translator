@@ -1975,6 +1975,8 @@ name = "lbrx-language-translator"
 version = "1.0.2"
 dependencies = [
  "arboard",
+ "core-foundation 0.10.1",
+ "core-graphics 0.25.0",
  "objc2-app-kit",
  "rdev",
  "serde",

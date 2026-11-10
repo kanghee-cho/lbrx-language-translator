@@ -6,6 +6,17 @@ use std::{
 
 use crate::config::Config;
 
+#[cfg(target_os = "macos")]
+mod macos;
+#[cfg(target_os = "macos")]
+use macos::listen;
+
+#[cfg(not(target_os = "macos"))]
+fn listen(callback: impl FnMut(EventType) + Send + 'static) -> Result<(), String> {
+    let mut callback = callback;
+    rdev::listen(move |event| callback(event.event_type)).map_err(|error| format!("{error:?}"))
+}
+
 pub enum Shortcut {
     Translate { clipboard_revision: u64 },
     Dismiss,
@@ -97,8 +108,8 @@ pub fn start(config: Arc<RwLock<Config>>, sender: SyncSender<Shortcut>) {
     std::thread::spawn(move || {
         let mut detector = Detector::default();
         let listener_sender = sender.clone();
-        let result = rdev::listen(move |event| {
-            let (key, pressed) = match event.event_type {
+        let result = listen(move |event| {
+            let (key, pressed) = match event {
                 EventType::KeyPress(key) => (key, true),
                 EventType::KeyRelease(key) => (key, false),
                 EventType::ButtonPress(_) => {
@@ -134,9 +145,7 @@ pub fn start(config: Arc<RwLock<Config>>, sender: SyncSender<Shortcut>) {
             }
         });
         if let Err(error) = result {
-            let _ = sender.send(Shortcut::Error(format!(
-                "전역 단축키를 시작하지 못했습니다: {error:?}"
-            )));
+            let _ = sender.send(Shortcut::Error(format!("전역 단축키 감지 오류: {error}")));
         }
     });
 }
