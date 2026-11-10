@@ -420,7 +420,7 @@ pub fn run() {
                 config_path,
                 config_error: Mutex::new(config_error),
                 listener_error: Mutex::new(if permission { None } else {
-                    Some("macOS 손쉬운 사용 권한을 허용한 뒤 앱을 다시 시작해주세요. 입력 모니터링을 요청하면 함께 허용해주세요.".into())
+                    Some("macOS 입력 모니터링에서 LBRX Translator를 허용한 뒤 앱을 완전히 종료하고 다시 실행해주세요.".into())
                 }),
                 busy: AtomicBool::new(false),
                 next_id: AtomicU64::new(1),

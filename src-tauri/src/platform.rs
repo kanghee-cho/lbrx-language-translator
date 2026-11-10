@@ -12,15 +12,15 @@ pub fn clipboard_revision() -> u64 {
 compile_error!("LBRX Translator currently supports Windows and macOS only.");
 
 #[cfg(target_os = "macos")]
-#[link(name = "ApplicationServices", kind = "framework")]
+#[link(name = "CoreGraphics", kind = "framework")]
 extern "C" {
-    fn AXIsProcessTrusted() -> bool;
+    fn CGPreflightListenEventAccess() -> bool;
 }
 
 pub fn input_permission() -> bool {
     #[cfg(target_os = "macos")]
     unsafe {
-        AXIsProcessTrusted()
+        CGPreflightListenEventAccess()
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -32,11 +32,11 @@ pub fn open_permissions() -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
         let status = std::process::Command::new("/usr/bin/open")
-            .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+            .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")
             .status()
             .map_err(|error| error.to_string())?;
         if !status.success() {
-            return Err("macOS 손쉬운 사용 설정을 열지 못했습니다.".into());
+            return Err("macOS 입력 모니터링 설정을 열지 못했습니다.".into());
         }
         Ok(())
     }

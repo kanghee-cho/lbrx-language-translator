@@ -1,6 +1,6 @@
 [package]
 name = "lbrx-language-translator"
-version = "1.0.1"
+version = "1.0.2"
 license = "MIT"
 description = "A quiet, double-copy translation companion"
 edition = "2021"

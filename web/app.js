@@ -103,7 +103,7 @@ async function setupSettings() {
     try {
       await api.core.invoke("open_permissions");
       feedback(
-        "손쉬운 사용에서 LBRX Translator를 허용해주세요. 입력 모니터링도 요청되면 허용한 뒤 앱을 다시 시작해주세요.",
+        "입력 모니터링에서 LBRX Translator를 허용한 뒤 트레이 메뉴에서 앱을 완전히 종료하고 다시 실행해주세요.",
       );
     } catch (error) {
       feedback(message(error), true);

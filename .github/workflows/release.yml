@@ -43,9 +43,10 @@ jobs:
             macOS 12+: download the universal DMG or app ZIP (Apple Silicon and Intel).
 
             Includes Japanese furigana, searchable ISO 639-1 language codes, and automatic exclusion of the detected source language.
+            Fixes the macOS double-copy shortcut being blocked by an unrelated Accessibility permission check. Allow Input Monitoring for LBRX Translator, then fully quit and restart the app.
             Install the official Antigravity CLI and sign in with your Google AI Pro/Ultra account before translating. Node.js is not required at runtime.
 
-            Windows binaries are unsigned. The macOS app is ad-hoc signed, not Developer ID signed or notarized. SmartScreen/Gatekeeper warnings may appear; use the operating system's explicit approval flow only if you trust this release. macOS Accessibility permission is required for the copy shortcut.
+            Windows binaries are unsigned. The macOS app is ad-hoc signed, not Developer ID signed or notarized. SmartScreen/Gatekeeper warnings may appear; use the operating system's explicit approval flow only if you trust this release. macOS Input Monitoring permission is required for the copy shortcut; Accessibility permission is not required.
             SHA256SUMS.txt contains checksums for all downloads.
         run: |
           gh release create "$GITHUB_REF_NAME" dist/* \
