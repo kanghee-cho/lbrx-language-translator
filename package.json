@@ -1,14 +1,16 @@
 {
   "name": "lbrx-language-translator",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
     "build": "tauri build",
     "tauri": "tauri",
-    "check": "node --check web/app.js && prettier --check web tests package.json src-tauri/tauri.conf.json src-tauri/capabilities",
-    "format": "prettier --write web tests package.json src-tauri/tauri.conf.json src-tauri/capabilities",
+    "check": "node --check web/app.js && npm run check:version && prettier --check web tests scripts .github/workflows package.json src-tauri/tauri.conf.json src-tauri/capabilities",
+    "check:version": "node scripts/check-version.mjs",
+    "format": "prettier --write web tests scripts .github/workflows package.json src-tauri/tauri.conf.json src-tauri/capabilities",
     "test": "node --test tests/*.test.js"
   },
   "devDependencies": {
