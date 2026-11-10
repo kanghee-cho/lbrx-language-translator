@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "desktop",
+  "description": "Local settings and translation popup only",
+  "windows": ["settings", "tooltip"],
+  "permissions": ["core:event:default", "core:window:allow-start-dragging"]
+}
