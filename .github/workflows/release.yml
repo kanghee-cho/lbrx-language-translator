@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/ci.yml
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run check:version -- "$GITHUB_REF_NAME"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: LBRX-Translator-*
+          path: dist
+          merge-multiple: true
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_HOST: github.com
+          RELEASE_NOTES: |
+            Windows x64: download the portable ZIP or setup EXE.
+            macOS 12+: download the universal DMG or app ZIP (Apple Silicon and Intel).
+
+            Includes Japanese furigana and the Spanish language preset.
+            Install the official Antigravity CLI and sign in with your Google AI Pro/Ultra account before translating. Node.js is not required at runtime.
+
+            Windows binaries are unsigned. The macOS app is ad-hoc signed, not Developer ID signed or notarized. SmartScreen/Gatekeeper warnings may appear; use the operating system's explicit approval flow only if you trust this release. macOS Accessibility permission is required for the copy shortcut.
+            SHA256SUMS.txt contains checksums for all downloads.
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "github.com/$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "LBRX Translator $GITHUB_REF_NAME" \
+            --notes "$RELEASE_NOTES" \
+            --generate-notes

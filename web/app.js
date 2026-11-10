@@ -164,7 +164,23 @@ async function renderPopup() {
     heading.textContent = translation.language;
     const text = document.createElement("p");
     text.dir = "auto";
-    text.textContent = translation.text;
+    if (translation.furigana.length) {
+      text.lang = "ja";
+      text.className = "furigana-text";
+      for (const span of translation.furigana) {
+        if (span.reading) {
+          const ruby = document.createElement("ruby");
+          const reading = document.createElement("rt");
+          reading.textContent = span.reading;
+          ruby.append(document.createTextNode(span.text), reading);
+          text.append(ruby);
+        } else {
+          text.append(document.createTextNode(span.text));
+        }
+      }
+    } else {
+      text.textContent = translation.text;
+    }
     section.append(heading, text);
     translations.append(section);
   }
