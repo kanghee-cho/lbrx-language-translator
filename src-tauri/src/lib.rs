@@ -41,6 +41,8 @@ struct Popup {
     anchor: tauri::PhysicalPosition<f64>,
     status: String,
     source: String,
+    source_language: Option<String>,
+    skipped_languages: Vec<String>,
     translations: Vec<Translation>,
     error: Option<String>,
 }
@@ -48,6 +50,7 @@ struct Popup {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Settings {
+    language_codes: Vec<&'static str>,
     config: Config,
     shortcut: &'static str,
     platform: &'static str,
@@ -68,6 +71,7 @@ fn get_settings(app: AppHandle) -> Result<Settings, String> {
     let config_error = state.config_error.lock().map_err(lock_error)?.clone();
     let listener_error = state.listener_error.lock().map_err(lock_error)?.clone();
     Ok(Settings {
+        language_codes: config::LANGUAGE_CODES.split_ascii_whitespace().collect(),
         config,
         shortcut: if cfg!(target_os = "macos") {
             "⌘ C C"
@@ -308,6 +312,8 @@ async fn translation_request(app: &AppHandle, baseline: u64) -> Result<(), Strin
         anchor: app.cursor_position().map_err(|error| error.to_string())?,
         status: "loading".into(),
         source: String::new(),
+        source_language: None,
+        skipped_languages: Vec::new(),
         translations: Vec::new(),
         error: None,
     });
@@ -334,9 +340,11 @@ async fn translation_request(app: &AppHandle, baseline: u64) -> Result<(), Strin
         let mut popup = state.popup.lock().map_err(lock_error)?;
         if let Some(popup) = popup.as_mut().filter(|popup| popup.id == id) {
             match result {
-                Ok(translations) => {
+                Ok(result) => {
                     popup.status = "complete".into();
-                    popup.translations = translations;
+                    popup.source_language = Some(result.source_language);
+                    popup.skipped_languages = result.skipped_languages;
+                    popup.translations = result.translations;
                 }
                 Err(error) => {
                     popup.status = "error".into();

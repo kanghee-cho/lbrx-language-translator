@@ -4,7 +4,7 @@
 
 **Rust + Tauri 2 + 순수 HTML/CSS/JavaScript.** React, 프런트엔드 번들러, 상주 Node 서버는 사용하지 않습니다. 대기 중에는 OS 입력 이벤트만 수신하며 클립보드를 주기적으로 조회하지 않습니다. 설정창과 번역창은 필요할 때 생성하고 닫으면 WebView를 제거합니다. 번역 요청 중에만 Go 기반 공식 **Antigravity CLI (`agy`)**를 실행해 Gemini 모델을 사용합니다. 완성된 앱 실행에는 Node.js가 필요하지 않습니다.
 
-## 다운로드 · v1.0.0
+## 다운로드 · v1.0.1
 
 [GitHub Releases](https://github.com/kanghee-cho/lbrx-language-translator/releases)에서 Windows x64용 포터블 ZIP·설치 EXE와 macOS 12 이상용 Universal DMG·앱 ZIP을 내려받을 수 있습니다. macOS Universal 앱은 Apple Silicon과 Intel을 모두 지원합니다. 실행 전 아래의 Antigravity CLI 설치와 Google 로그인이 필요합니다.
 
@@ -38,9 +38,13 @@ Windows 버전은 미서명이며 macOS는 ad-hoc 서명만 적용되어 Develop
 
 기본 간격은 500ms이며 설정에서 변경할 수 있습니다. 키를 길게 누르는 자동 반복은 번역을 실행하지 않습니다. 일반 복사는 차단하지 않습니다. 실제 복사로 클립보드가 갱신된 경우에만 텍스트를 읽습니다. 복사 기능을 지원하지 않는 앱, 보안 입력란, 관리자 권한이 다른 앱에서는 사용할 수 없을 수 있습니다. 단축키를 쓰면 일반 복사와 마찬가지로 클립보드 내용이 선택 문장으로 바뀝니다.
 
-번역은 한 번에 12,000자, 대상 언어는 최대 8개입니다. 언어는 쉼표로 구분하며 목록에 없는 언어도 입력할 수 있습니다. 모든 대상 언어를 **하나의 요청**으로 번역합니다. 요청이 진행 중일 때 추가 단축키 입력은 중복 요청을 만들지 않습니다.
+번역은 한 번에 12,000자, 대상 언어는 최대 8개입니다. **ISO 639-1 두 자리 코드**를 쉼표로 입력합니다. 예: `ko, en, ja, es, fr, de, vi`. 설정의 **두 자리 언어 코드 보기**를 누르면 코드·한국어/영어 이름을 검색할 수 있는 팝업이 열리며, 코드를 눌러 추가·해제할 수 있습니다. 등록되지 않은 코드는 저장할 수 없습니다. 목록은 [미국 의회도서관의 ISO 언어 코드 레지스트리](https://www.loc.gov/standards/iso639-2/php/code_list.php)를 기준으로 합니다.
 
-자주 사용하는 언어에서 **Español(스페인어)**도 선택할 수 있습니다. 일본어 번역에는 한자 위에 히라가나 **후리가나**를 표시합니다. 읽기는 같은 Gemini 요청으로 생성하며, 원문 번역과 읽기 구문의 일치 여부를 검증한 뒤 안전한 ruby 요소로 렌더링합니다. AI가 생성한 읽기이므로 고유명사 등의 발음은 틀릴 수 있습니다.
+하나의 Gemini 요청에서 원문의 주 언어를 감지하고 **동일한 언어는 번역 대상에서 제외**합니다. 모든 대상이 원문과 같으면 번역 생략 안내를 표시합니다. 혼합 문장 등 언어를 확정하기 어려우면 제외하지 않고 전체 대상으로 번역하며 이를 표시합니다. 모두 제외되는 경우에도 언어 감지를 위한 요청 1건은 실행됩니다. 요청 중 추가 단축키 입력은 중복 요청을 만들지 않습니다.
+
+기존 기본 언어 이름 설정(한국어, English, 日本語, Español, 简体中文)은 `ko, en, ja, es, zh`로 읽어 들이며 사용자가 저장하기 전에는 설정 파일을 덮어쓰지 않습니다. 그 밖의 기존 언어 이름은 코드로 다시 지정해야 합니다.
+
+일본어(`ja`) 번역에는 한자 위에 히라가나 **후리가나**를 표시합니다. 읽기는 같은 Gemini 요청으로 생성하며, 번역과 읽기 구문의 일치 여부를 검증한 뒤 안전한 ruby 요소로 렌더링합니다. AI가 생성한 읽기이므로 고유명사 등의 발음은 틀릴 수 있습니다.
 
 번역창은 원래 앱의 포커스를 가져오지 않습니다. **Esc** 또는 ×로 닫으면 진행 중인 CLI 요청도 취소합니다. 닫기 전까지 결과를 확인하고 스크롤할 수 있습니다. 앱 종료는 트레이 메뉴의 **종료**를 사용하세요.
 
@@ -85,12 +89,12 @@ npm run build -- --no-bundle
 
 PR 및 `main` 푸시는 Windows/macOS 검증과 패키징을 실행합니다. 해당 Actions 실행의 **Artifacts**에서 결과를 30일 동안 내려받을 수 있습니다. 일반 푸시는 GitHub Release를 생성하지 않습니다.
 
-`package.json`, npm/Cargo lockfile, `Cargo.toml`, `tauri.conf.json`의 버전을 동일하게 변경한 뒤 `v1.0.0`과 같은 버전 태그를 푸시하면 **Release** 워크플로가 두 운영체제의 릴리스 패키지를 빌드하고 GitHub Release에 자동 게시합니다. 어느 플랫폼이든 실패하면 게시하지 않으며, 태그와 매니페스트 버전이 다르면 빌드 전에 실패합니다.
+`package.json`, npm/Cargo lockfile, `Cargo.toml`, `tauri.conf.json`의 버전을 동일하게 변경한 뒤 `v1.0.1`과 같은 버전 태그를 푸시하면 **Release** 워크플로가 두 운영체제의 릴리스 패키지를 빌드하고 GitHub Release에 자동 게시합니다. 어느 플랫폼이든 실패하면 게시하지 않으며, 태그와 매니페스트 버전이 다르면 빌드 전에 실패합니다.
 
 ```powershell
-npm run check:version -- v1.0.0
-git tag -a v1.0.0 -m "LBRX Translator v1.0.0"
-git push origin v1.0.0
+npm run check:version -- v1.0.1
+git tag -a v1.0.1 -m "LBRX Translator v1.0.1"
+git push origin v1.0.1
 ```
 
 ## 개발 확인
@@ -105,7 +109,7 @@ cargo clippy --manifest-path src-tauri\Cargo.toml --all-targets -- -D warnings
 
 Rust 테스트는 단축키 상태 전이, 설정 저장과 검증, 다중 언어 응답 검증, 셸을 거치지 않는 CLI 호출, 시간 초과와 실패 응답을 확인합니다. CLI 호출 테스트는 로컬 Node.js fixture를 사용하므로 Google에 요청하거나 구독 한도를 사용하지 않습니다. 실제 OS의 전역 단축키, 권한, Google 로그인 동작은 해당 환경에서 별도로 확인해야 합니다.
 
-실제 구독 계정 연결을 확인하는 테스트는 기본적으로 제외되어 있습니다. 아래 명령을 명시적으로 실행하면 `I study Japanese every day.`를 한국어·일본어·스페인어로 번역하는 요청 1건을 보내므로 구독 한도가 사용됩니다. 일본어 후리가나 응답도 함께 확인합니다.
+실제 구독 계정 연결을 확인하는 테스트는 기본적으로 제외되어 있습니다. 아래 명령을 실행하면 영어·한국어·일본어·스페인어의 합성 문장으로 요청 4건을 보내므로 구독 한도가 사용됩니다. 각 원문과 동일한 언어가 제외되는지 확인합니다.
 
 ```powershell
 cargo test --manifest-path src-tauri\Cargo.toml live_subscription_translation -- --ignored
